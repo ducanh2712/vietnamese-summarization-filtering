@@ -1,0 +1,24 @@
+[project]
+name = "vietnamese-summarization-filtering"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Duc-Anh Pham",email = "phamducanh2712@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "datasets (>=4.4.1,<5.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pylint (>=4.0.4,<5.0.0)",
+    "black (>=25.12.0,<26.0.0)",
+    "mypy (>=1.19.0,<2.0.0)"
+]
