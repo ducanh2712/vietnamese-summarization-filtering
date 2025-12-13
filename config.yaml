@@ -1,0 +1,62 @@
+# Configuration for Vietnamese Summarization Training
+
+# Model Configuration
+model:
+  name: "google/mt5-small" 
+  max_input_length: 512
+  max_target_length: 128
+
+# Dataset Configuration
+dataset:
+  name: "8Opt/vietnamese-summarization-dataset-0001"
+  train_split: "train"
+  val_split: "validation"
+  test_split: "test"
+  task_prefix: "summarize: "
+  
+# Training Configuration
+training:
+  output_dir: "./output/checkpoints"
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 2
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  warmup_steps: 500
+  
+  # Evaluation and Saving
+  eval_strategy: "steps"  # "steps" or "epoch"
+  eval_steps: 500
+  save_strategy: "steps"
+  save_steps: 500
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "rouge1"
+  greater_is_better: true
+  
+  # Logging
+  logging_dir: "./output/logs"
+  logging_steps: 100
+  report_to: ["tensorboard"]
+  
+  # Other options
+  fp16: true  # Use mixed precision training (set false if GPU doesn't support)
+  dataloader_num_workers: 4
+  seed: 42
+
+# Generation Configuration
+generation:
+  max_length: 128
+  min_length: 30
+  num_beams: 4
+  length_penalty: 2.0
+  early_stopping: true
+  no_repeat_ngram_size: 3
+
+# Evaluation Configuration
+evaluation:
+  metrics: ["rouge", "bleu", "meteor"]
+  batch_size: 16
+  results_file: "./output/evaluation_results.json"
+  predictions_file: "./output/predictions.json"
