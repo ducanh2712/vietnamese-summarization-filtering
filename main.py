@@ -3,6 +3,13 @@ import argparse
 from util.dataset_analysis import run_dataset_exploration
 from inference import run_inference
 
+import torch
+
+SEED = 42
+
+torch.manual_seed(SEED)
+torch.cuda.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)
 
 def main():
     parser = argparse.ArgumentParser(
