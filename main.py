@@ -62,7 +62,13 @@ def main():
     )
 
     args = parser.parse_args()
-
+    
+    print("CUDA available:", torch.cuda.is_available())
+    print("Number of GPUs:", torch.cuda.device_count())
+    if torch.cuda.is_available():
+        print("Current GPU device:", torch.cuda.current_device())
+        print("GPU name:", torch.cuda.get_device_name(torch.cuda.current_device()))
+    
     if args.mode == "analysis":
         run_dataset_exploration(
             dataset_name=args.dataset,
@@ -73,10 +79,16 @@ def main():
         )
 
     elif args.mode == "inference":
+        print("=" * 80)
+        print("STARTING INFERENCE")
+        print("=" * 80)
         run_inference(
             sample_index=args.sample_index,
             dataset_name=args.dataset
         )
+        print("\n" + "=" * 80)
+        print("INFERENCE COMPLETED")
+        print("=" * 80)
 
     elif args.mode == "train":
         print("=" * 80)
@@ -87,6 +99,9 @@ def main():
         print("TRAINING COMPLETED - STARTING EVALUATION")
         print("=" * 80)
         evaluate_model(model_path=model_path, config_path=args.config, split=args.split)
+        print("\n" + "=" * 80)
+        print("EVALUATION COMPLETED")
+        print("=" * 80)
 
     elif args.mode == "eval":
         print("=" * 80)
@@ -97,6 +112,9 @@ def main():
             config_path=args.config,
             split=args.split
         )
+        print("\n" + "=" * 80)
+        print("EVALUATION COMPLETED")
+        print("=" * 80)
 
 
 if __name__ == "__main__":
