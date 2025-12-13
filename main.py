@@ -1,42 +1,52 @@
-# main.py
-from util.dataset_analysis import (
-    load_dataset_8opt,
-    basic_info,
-    analyze_text_lengths,
-    show_samples,
-    check_data_quality,
-    analyze_vocab,
-    export_to_csv,
-    summarization_ratio_analysis
-)
+import argparse
+
+from util.dataset_analysis import run_dataset_exploration
+from inference import run_inference
+
 
 def main():
-    print("\n" + "🔍"*35)
-    print("VIETNAMESE SUMMARIZATION DATASET EXPLORER")
-    print("Dataset: 8Opt/vietnamese-summarization-dataset-0001")
-    print("🔍"*35 + "\n")
-    
-    # Load dataset
-    dataset = load_dataset_8opt()
-    
-    if dataset is None:
-        print("\n❌ Could not load dataset. Please check again.")
-        return
-    
-    # Choose split to analyze
-    available_splits = list(dataset.keys())
-    split_to_analyze = "train" if "train" in available_splits else available_splits[0]
-    
-    # Run analyses
-    basic_info(dataset)
-    analyze_text_lengths(dataset, split=split_to_analyze)
-    show_samples(dataset, split=split_to_analyze, n=3)
-    check_data_quality(dataset, split=split_to_analyze)
-    analyze_vocab(dataset, split=split_to_analyze, n_common=15)
-    summarization_ratio_analysis(dataset, split=split_to_analyze)
-    export_to_csv(dataset, split=split_to_analyze, n=100)
-    
-    print("\n✅ ANALYSIS COMPLETED!")
+    parser = argparse.ArgumentParser(
+        description="Vietnamese Summarization Project"
+    )
+
+    parser.add_argument(
+        "--mode",
+        type=str,
+        required=True,
+        choices=["analysis", "inference"],
+        help="Run dataset analysis or model inference"
+    )
+
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="8Opt/vietnamese-summarization-dataset-0001",
+        help="HuggingFace dataset name"
+    )
+
+    parser.add_argument(
+        "--sample_index",
+        type=int,
+        default=0,
+        help="Sample index for inference"
+    )
+
+    args = parser.parse_args()
+
+    if args.mode == "analysis":
+        run_dataset_exploration(dataset_name=args.dataset,
+        split="train",
+        n_samples=3,
+        n_vocab=15,
+        export_n=100
+    )
+
+    elif args.mode == "inference":
+        run_inference(
+            sample_index=args.sample_index,
+            dataset_name=args.dataset
+        )
+
 
 if __name__ == "__main__":
     main()
