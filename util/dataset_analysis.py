@@ -1,22 +1,29 @@
 from datasets import load_dataset
 import pandas as pd
 from collections import Counter
-import json
+
+from util import preprocess_test_cleaning
 
 
-def load_dataset_8opt():
-    """Load dataset from 8Opt"""
-    print("="*70)
-    print("LOADING DATASET: 8Opt/vietnamese-summarization-dataset-0001")
-    print("="*70)
-    
+def load_dataset_8opt(dataset_name: str, clean: bool = True):
+    print("=" * 70)
+    print(f"LOADING DATASET: {dataset_name}")
+    print("=" * 70)
+
     try:
-        dataset = load_dataset("8Opt/vietnamese-summarization-dataset-0001")
-        print(f"✓ Successfully loaded!")
+        dataset = load_dataset(dataset_name)
+
+        if clean:
+            dataset = preprocess_test_cleaning.clean_dataset(dataset)
+
+        print("✓ Successfully loaded!")
         return dataset
+
     except Exception as e:
         print(f"✗ Error: {e}")
         return None
+
+
 
 
 def basic_info(dataset):
@@ -232,3 +239,52 @@ def summarization_ratio_analysis(dataset, split="train"):
             print(f"  Median: {sorted(ratios)[len(ratios)//2]:.3f}")
     else:
         print("\n⚠ Could not find document/summary columns")
+        
+def run_dataset_exploration(
+    dataset_name: str,
+    split: str = "train",
+    n_samples: int = 3,
+    n_vocab: int = 15,
+    export_n: int = 100
+):
+    """
+    Run full exploration pipeline for a summarization dataset.
+    """
+
+    print("\n" + "🔍" * 35)
+    print("VIETNAMESE SUMMARIZATION DATASET EXPLORER")
+    print(f"Dataset: {dataset_name}")
+    print("🔍" * 35 + "\n")
+
+    # Load dataset
+    dataset = load_dataset_8opt(dataset_name)
+
+    if dataset is None:
+        print("\n❌ Could not load dataset. Please check again.")
+        return
+
+    # Choose split
+    available_splits = list(dataset.keys())
+    split_to_analyze = split if split in available_splits else available_splits[0]
+
+    print(f"Using split: {split_to_analyze}")
+
+    # Run analyses
+    basic_info(dataset)
+    analyze_text_lengths(dataset, split=split_to_analyze)
+    show_samples(dataset, split=split_to_analyze, n=n_samples)
+    check_data_quality(dataset, split=split_to_analyze)
+    analyze_vocab(dataset, split=split_to_analyze, n_common=n_vocab)
+    summarization_ratio_analysis(dataset, split=split_to_analyze)
+    export_to_csv(dataset, split=split_to_analyze, n=export_n)
+
+    print("\n✅ ANALYSIS COMPLETED!")
+
+def data_analysis():
+    run_dataset_exploration(
+        dataset_name="8Opt/vietnamese-summarization-dataset-0001",
+        split="train",
+        n_samples=3,
+        n_vocab=15,
+        export_n=100
+    )
