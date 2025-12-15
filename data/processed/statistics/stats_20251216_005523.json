@@ -1,0 +1,35 @@
+{
+  "baseline": {
+    "total_pairs": 15620,
+    "avg_input_length": 1717.9375800256082,
+    "avg_target_length": 503.0032650448143,
+    "avg_input_words": 396.5083226632522,
+    "avg_target_words": 111.92765685019207,
+    "num_truncated": 2595,
+    "truncation_rate": 0.16613316261203584,
+    "input_target_ratio": 3.4153606932800944
+  },
+  "fused_sentences": {
+    "total_pairs": 15620,
+    "avg_num_sentences": 14.45653008962868,
+    "avg_input_length": 1707.322343149808,
+    "avg_target_length": 503.0032650448143,
+    "avg_input_words": 393.643085787452,
+    "avg_target_words": 111.92765685019207,
+    "num_truncated": 2572,
+    "truncation_rate": 0.1646606914212548,
+    "input_target_ratio": 3.3942569796195987
+  },
+  "discourse_aware": {
+    "total_pairs": 15620,
+    "avg_num_sentences_original": 14.45653008962868,
+    "avg_num_sentences_selected": 2.47202304737516,
+    "avg_input_length": 725.9288732394366,
+    "avg_target_length": 503.0032650448143,
+    "avg_input_words": 168.78649167733676,
+    "avg_target_words": 111.92765685019207,
+    "avg_compression_ratio": 0.4390584580237325,
+    "avg_reduction_percentage": 56.09415419762666,
+    "input_target_ratio": 1.4431891872009242
+  }
+}

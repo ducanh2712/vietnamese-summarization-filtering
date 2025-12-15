@@ -13,7 +13,20 @@ dataset:
   val_split: "validation"
   test_split: "test"
   task_prefix: "summarize: "
-  
+
+# Data Processing Configuration (NEW)
+data_processing:
+  enabled: false                      # Enable preprocessing
+  approaches:                         # Which approaches to run
+    - baseline
+    - fused_sentences
+    - discourse_aware
+  max_tokens: 512
+  output_dir: "./data/processed"
+  logs_dir: "./logs"
+  limit_samples: null                 # null = full dataset, số = limit
+  use_processed: false                # Use processed data for training
+
 # Training Configuration
 training:
   output_dir: "./output/checkpoints"
@@ -26,7 +39,7 @@ training:
   warmup_steps: 500
   
   # Evaluation and Saving
-  eval_strategy: "steps"  # "steps" or "epoch"
+  eval_strategy: "steps"
   eval_steps: 500
   save_strategy: "steps"
   save_steps: 500
@@ -41,7 +54,7 @@ training:
   report_to: ["tensorboard"]
   
   # Other options
-  fp16: true  # Use mixed precision training (set false if GPU doesn't support)
+  fp16: true
   dataloader_num_workers: 4
   seed: 42
 

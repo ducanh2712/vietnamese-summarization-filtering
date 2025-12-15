@@ -210,9 +210,9 @@ def summarization_ratio_analysis(dataset, split="train"):
     
     for col in features:
         col_lower = col.lower()
-        if 'doc' in col_lower or 'text' in col_lower or 'article' in col_lower:
+        if 'doc' in col_lower or 'text' in col_lower or 'document' in col_lower:
             doc_col = col
-        if 'sum' in col_lower or 'abstract' in col_lower:
+        if 'sum' in col_lower or 'summary' in col_lower:
             sum_col = col
     
     if doc_col and sum_col:

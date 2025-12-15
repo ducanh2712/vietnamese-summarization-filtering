@@ -1,0 +1,57 @@
+================================================================================
+EVALUATION REPORT
+================================================================================
+Timestamp: 20251214_030958
+Model: google/mt5-small
+Model type: base
+Dataset: 8Opt/vietnamese-summarization-dataset-0001
+Split: test
+Number of samples: 1953
+
+================================================================================
+METRICS
+================================================================================
+ROUGE-1:    0.1324
+ROUGE-2:    0.0624
+ROUGE-L:    0.1115
+ROUGE-Lsum: 0.1115
+BLEU:       0.0024
+METEOR:     0.0437
+
+================================================================================
+GENERATION CONFIG
+================================================================================
+Max length: 128
+Min length: 30
+Num beams: 4
+Length penalty: 2.0
+Early stopping: True
+
+================================================================================
+SAMPLE PREDICTIONS (first 5)
+================================================================================
+
+--- Sample 1 ---
+Document: Nguyên nhân Zona không phải là một bệnh nhiễm trùng, mà nó là sự tái phát của virut gây bệnh thủy đậu (Virus Varicella).Đối với người đã từng mắc bệnh thủy đậu, sau khi khỏi, virut vẫn chưa bị tiêu di...
+Prediction: <extra_id_0> tốt nhất tại đây. ) <extra_id_10> lỏng..!.)..)).
+Reference: Zona là bệnh do sự tái phát của virut Varicella (gây bệnh thủy đậu). Bệnh xuất hiện khi hệ miễn dịch suy yếu, tạo điều kiện cho virut ẩn náu tái hoạt động, gây tổn thương dọc theo dây thần kinh và biểu hiện trên da. Triệu chứng bao gồm cảm giác đau rát trước khi nổi mụn nước, xuất hiện ở một bên cơ thể. Việc chẩn đoán dựa trên vị trí và hình dạng tổn thương, và điều trị tập trung vào việc dùng thuốc kháng virus, kháng sinh, giảm đau và thuốc bôi. Mặc dù không có cách phòng ngừa trực tiếp, nhưng việc duy trì hệ miễn dịch khỏe mạnh và tiêm vaccine thủy đậu có thể làm giảm nguy cơ mắc bệnh.
+
+--- Sample 2 ---
+Document: Các bé gái thường có kinh nguyệt lần đầu vào khoảng 2 năm sau khi xuất hiện các dấu hiệu đầu tiên của thời kỳ dậy thì , thường là nhú ngực ( núm vú hơi sưng và nhú lên chứ chưa thực sự có ngực ) , và ...
+Prediction: <extra_id_0> lỗi này ) . <extra_id_4> lợi .. <extra_id_26> lẽ:. <extra_id_49> tới .
+Reference: Kinh nguyệt là một hiện tượng sinh lý bình thường của phụ nữ, thường bắt đầu vào khoảng 12 tuổi và kéo dài đến thời kỳ mãn kinh. Dấu hiệu đầu tiên của dậy thì ở bé gái thường là sự phát triển của nhú ngực, sau đó là mọc lông nách và lông mu. Kỳ kinh nguyệt đầu tiên có thể đi kèm với các triệu chứng như đau vú và thay đổi tâm trạng, nhưng đây là điều bình thường. Chu kỳ kinh nguyệt, thường kéo dài 28 ngày, là một phần của chu kỳ sinh sản và có thể đi kèm với hội chứng tiền kinh nguyệt.
+
+--- Sample 3 ---
+Document: Tweet thông báo về trường hợp sản phụ sinh con tại nhà ở Miami do bão Irma .Một phụ nữ ở ở Little Haiti , thành phố Miami , bang Florida , Mỹ với sự hỗ trợ của bác sĩ qua điện thoại đã tự sinh con tại...
+Prediction: <extra_id_0> bão Irma .Một bé gái .Cả hai đều khoẻ mạnh .Hãy giữ an toàn
+Reference: Vào ngày 10/9, một sản phụ ở Miami, bang Florida, Mỹ đã sinh con thành công tại nhà trong bão Irma với sự hướng dẫn qua điện thoại của bác sĩ do đội cứu hộ không thể tiếp cận kịp thời. Bác sĩ đã hướng dẫn sản phụ tự sinh và cắt dây rốn cho bé gái sơ sinh. Sau đó, đội cứu hộ đã đưa hai mẹ con đến bệnh viện trong tình trạng ổn định. Sự việc được công chúng ca ngợi trên mạng xã hội. Bão Irma là một trong những cơn bão mạnh nhất lịch sử, gây thiệt hại nặng nề tại khu vực Caribe và Florida.
+
+--- Sample 4 ---
+Document: Trước khi uống thảo dược và axit amin, bạn cần tìm hiểu tình trạng thiếu hụt vitamin hoặc khoáng chất. Nguyên nhân có thể là do chế độ ăn uống thiếu dinh dưỡng (kém dinh dưỡng) gây ảnh hưởng đến tâm l...
+Prediction: <extra_id_0> hụt Vitamin D3 được chứng minh là có tác dụng chữa trầm cảm.
+Reference: Để cải thiện tâm trạng và giảm căng thẳng, việc tìm hiểu về tình trạng thiếu hụt vitamin và khoáng chất là rất quan trọng. Chế độ ăn uống thiếu dinh dưỡng có thể ảnh hưởng đến tâm lý do não bộ thiếu các dưỡng chất cần thiết. Vitamin , , và có vai trò quan trọng, đặc biệt là Vitamin D3 giúp cải thiện tinh thần. Các loại thảo dược như St John's Wort và rễ cây hồ tiêu có thể được sử dụng, nhưng cần có sự tư vấn. Tryptophan, một axit amin quan trọng, cũng có thể cải thiện tâm trạng và giấc ngủ, có thể được bổ sung qua thực phẩm hoặc viên uống.
+
+--- Sample 5 ---
+Document: Nấm này có thể lây nhiễm ở da, miệng, tóc, móng trên cơ thể người. Hắc lào rất dễ lây. Kiểm tra các dấu hiệu như phồng rộp, bong tróc hoặc nứt nẻ da. Nấm da chân thường kèm theo cảm giác bỏng rát. Nấm...
+Prediction: <extra_id_0> lỏng tốt nhất trong trường hợp bị nhiễm nấm ở người.
+Reference: Bài viết này cung cấp thông tin về bệnh nhiễm nấm trên da, móng, tóc và miệng. Các triệu chứng bao gồm phồng rộp, bong tróc da, và biến màu da, cùng với cảm giác bỏng rát và đau. Để điều trị, có thể sử dụng xà phòng sát khuẩn, dầu tràm trà (cần thận trọng với nam giới vị thành niên), giấm và tỏi. Các biện pháp này giúp kháng nấm và sát trùng, hỗ trợ quá trình phục hồi da.
