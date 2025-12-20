@@ -1,5 +1,6 @@
 """
 Main data processor - tích hợp tất cả approaches
+Output format: document, summary
 """
 
 import logging
@@ -8,7 +9,7 @@ from datasets import load_dataset
 import json
 from datetime import datetime
 from util.dataset_analysis import load_dataset_8opt
-from .text_utils import clean_text
+from .text_utils import get_duplicate_stats, remove_duplicates as dedup_pairs
 from . import approach1_baseline, approach2_fused, approach3_discourse
 
 
@@ -29,14 +30,35 @@ def setup_logger(name='data_processor'):
     return logger
 
 
-def save_training_pairs(pairs, output_path, approach_name):
-    """Save training pairs to JSONL"""
+def save_training_pairs(pairs, output_path, approach_name, include_metadata=False):
+    """
+    Save training pairs to JSONL
+    
+    Args:
+        pairs: List of training pairs
+        output_path: Output directory path
+        approach_name: Name of approach
+        include_metadata: Whether to include metadata in output
+        
+    Returns:
+        Path to output file
+    """
     output_file = Path(output_path) / f"{approach_name}_training_pairs.jsonl"
     output_file.parent.mkdir(parents=True, exist_ok=True)
     
     with open(output_file, 'w', encoding='utf-8') as f:
         for pair in pairs:
-            f.write(json.dumps(pair, ensure_ascii=False) + '\n')
+            # Tạo output dict đơn giản: chỉ document và summary
+            output = {
+                'document': pair['document'],
+                'summary': pair['summary']
+            }
+            
+            # Thêm metadata nếu cần (cho debugging/tracking)
+            if include_metadata and 'metadata' in pair:
+                output['metadata'] = pair['metadata']
+            
+            f.write(json.dumps(output, ensure_ascii=False) + '\n')
     
     return output_file
 
@@ -52,15 +74,64 @@ def save_statistics(stats_dict, output_dir):
     return stats_file
 
 
+def remove_duplicate_articles(articles, mode='both', keep='first'):
+    """
+    Remove duplicate articles TRƯỚC KHI processing
+    
+    Args:
+        articles: List of article dicts với 'document' và 'summary'
+        mode: 'document', 'summary', hoặc 'both'
+        keep: 'first' hoặc 'last'
+        
+    Returns:
+        List of deduplicated articles
+    """
+    logger = logging.getLogger(__name__)
+    
+    # Chuyển articles thành format giống training pairs để dùng hàm dedup hiện có
+    pairs_format = [
+        {
+            'document': article['document'],
+            'summary': article['summary']
+        }
+        for article in articles
+    ]
+    
+    # Get duplicate stats trước khi remove
+    dup_stats = get_duplicate_stats(pairs_format)
+    
+    logger.info(f"\n📊 Duplicate check on RAW dataset:")
+    logger.info(f"  Total articles: {dup_stats['total_pairs']}")
+    logger.info(f"  Document duplicates: {dup_stats['document_duplicates']['count']} ({dup_stats['document_duplicates']['rate']:.2f}%)")
+    logger.info(f"  Summary duplicates: {dup_stats['summary_duplicates']['count']} ({dup_stats['summary_duplicates']['rate']:.2f}%)")
+    logger.info(f"  Exact duplicates: {dup_stats['exact_duplicates']['count']} ({dup_stats['exact_duplicates']['rate']:.2f}%)")
+    
+    # Remove duplicates
+    original_count = len(pairs_format)
+    deduplicated = dedup_pairs(pairs_format, mode=mode, keep=keep)
+    removed = original_count - len(deduplicated)
+    
+    logger.info(f"\n🔧 Deduplication (mode={mode}, keep={keep}):")
+    logger.info(f"  Original: {original_count} articles")
+    logger.info(f"  Removed: {removed} articles ({removed/original_count*100:.2f}%)")
+    logger.info(f"  Remaining: {len(deduplicated)} articles")
+    
+    return deduplicated
+
+
 def process_dataset_all_approaches(
     dataset_name: str,
     approaches: list = ['baseline'],
     max_tokens: int = 512,
     output_dir: str = './data/processed',
-    limit: int = None
+    limit: int = None,
+    include_metadata: bool = False,
+    remove_duplicates: bool = True,
+    duplicate_mode: str = 'document'
 ):
     """
     Process dataset với tất cả approaches được chỉ định
+    Output format: document, summary
     
     Args:
         dataset_name: HuggingFace dataset name
@@ -68,6 +139,9 @@ def process_dataset_all_approaches(
         max_tokens: Max token length
         output_dir: Output directory
         limit: Limit samples (for testing)
+        include_metadata: Include metadata in JSONL output
+        remove_duplicates: Remove duplicates TRƯỚC KHI processing
+        duplicate_mode: 'document', 'summary', hoặc 'both' (for deduplication)
         
     Returns:
         Dict of results
@@ -76,6 +150,9 @@ def process_dataset_all_approaches(
     
     logger.info("="*70)
     logger.info("VIETNAMESE SUMMARIZATION DATA PROCESSING")
+    logger.info("Output format: document, summary")
+    if remove_duplicates:
+        logger.info(f"Deduplication: ENABLED (mode={duplicate_mode}) - BEFORE processing")
     logger.info("="*70)
     
     # Load dataset
@@ -90,7 +167,10 @@ def process_dataset_all_approaches(
             logger.info(f"   Limited to: {len(train_data)} samples")
         
         articles = [
-            {'document': item['document'], 'summary': item['summary']}
+            {
+                'document': item['document'], 
+                'summary': item['summary']
+            }
             for item in train_data
         ]
         
@@ -98,11 +178,20 @@ def process_dataset_all_approaches(
         logger.error(f"❌ Error loading dataset: {e}")
         raise
     
+    # ===== REMOVE DUPLICATES TRƯỚC KHI PROCESSING =====
+    if remove_duplicates:
+        logger.info("\n" + "="*70)
+        logger.info("🧹 REMOVING DUPLICATES FROM RAW DATASET")
+        logger.info("="*70)
+        articles = remove_duplicate_articles(articles, mode=duplicate_mode, keep='first')
+        logger.info(f"\n✅ Will process {len(articles)} unique articles")
+    
     # Process approaches
     if 'all' in approaches:
         approaches = ['baseline', 'fused_sentences', 'discourse_aware']
     
     logger.info(f"\n🎯 Processing approaches: {', '.join(approaches)}")
+    logger.info(f"📄 Include metadata in output: {include_metadata}")
     
     results = {}
     all_stats = {}
@@ -119,7 +208,8 @@ def process_dataset_all_approaches(
         output_file = save_training_pairs(
             pairs,
             Path(output_dir) / 'baseline',
-            'baseline'
+            'baseline',
+            include_metadata
         )
         logger.info(f"💾 Saved to: {output_file}")
         
@@ -141,7 +231,8 @@ def process_dataset_all_approaches(
         output_file = save_training_pairs(
             pairs,
             Path(output_dir) / 'fused_sentences',
-            'fused_sentences'
+            'fused_sentences',
+            include_metadata
         )
         logger.info(f"💾 Saved to: {output_file}")
         
@@ -163,7 +254,8 @@ def process_dataset_all_approaches(
         output_file = save_training_pairs(
             pairs,
             Path(output_dir) / 'discourse_aware',
-            'discourse_aware'
+            'discourse_aware',
+            include_metadata
         )
         logger.info(f"💾 Saved to: {output_file}")
         
@@ -185,9 +277,13 @@ def process_dataset_all_approaches(
     for approach_name, stats in all_stats.items():
         logger.info(f"\n{approach_name.upper()}:")
         logger.info(f"  Total pairs: {stats.get('total_pairs', 0)}")
-        logger.info(f"  Avg input length: {stats.get('avg_input_length', 0):.1f} chars")
-        logger.info(f"  Avg target length: {stats.get('avg_target_length', 0):.1f} chars")
-        logger.info(f"  Input/Target ratio: {stats.get('input_target_ratio', 0):.2f}x")
+        logger.info(f"  Avg document length: {stats.get('avg_document_length', 0):.1f} chars")
+        logger.info(f"  Avg summary length: {stats.get('avg_summary_length', 0):.1f} chars")
+        logger.info(f"  Avg document words: {stats.get('avg_document_words', 0):.1f}")
+        logger.info(f"  Avg summary words: {stats.get('avg_summary_words', 0):.1f}")
+        
+        if 'document_summary_ratio' in stats:
+            logger.info(f"  Document/Summary ratio: {stats['document_summary_ratio']:.2f}x")
         
         if 'avg_compression_ratio' in stats:
             logger.info(f"  Avg compression: {(1 - stats['avg_compression_ratio']) * 100:.1f}%")

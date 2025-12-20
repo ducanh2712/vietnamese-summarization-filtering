@@ -1,5 +1,6 @@
 """
 Approach 3: Discourse-Aware Selection - Lead, Middle, Tail
+Output format: {'document', 'summary'}
 """
 
 import logging
@@ -9,7 +10,8 @@ from .text_utils import (
     split_into_sentences,
     truncate_to_max_tokens,
     count_words,
-    calculate_compression_ratio
+    calculate_compression_ratio,
+    create_training_pair
 )
 
 logger = logging.getLogger(__name__)
@@ -20,6 +22,7 @@ def process_single_article(article: Dict, max_tokens: int = 512) -> Dict:
     APPROACH 3: DISCOURSE-AWARE SELECTION
     
     Chọn 3 câu: Lead (đầu), Middle (giữa), Tail (cuối)
+    Output format: {'document', 'summary'}
     
     Args:
         article: Dict with 'document', 'summary'
@@ -83,26 +86,31 @@ def process_single_article(article: Dict, max_tokens: int = 512) -> Dict:
     # Calculate compression
     compression = calculate_compression_ratio(full_text, input_text)
     
-    return {
-        'input': input_text,
-        'target': summary,
-        'metadata': {
-            'approach': 'discourse_aware',
-            'filtered': True,
-            'selection_strategy': 'lead_middle_tail',
-            'num_sentences_original': n,
-            'num_sentences_selected': len(selected_sentences),
-            'selected_indices': selected_indices,
-            'original_length': len(full_text),
-            'input_length': len(input_text),
-            'target_length': len(summary),
-            'original_words': count_words(full_text),
-            'input_words': count_words(input_text),
-            'target_words': count_words(summary),
-            'compression_ratio': compression,
-            'reduction_percentage': (1 - compression) * 100
-        }
+    # Build metadata
+    metadata = {
+        'approach': 'discourse_aware',
+        'filtered': True,
+        'selection_strategy': 'lead_middle_tail',
+        'num_sentences_original': n,
+        'num_sentences_selected': len(selected_sentences),
+        'selected_indices': selected_indices,
+        'original_length': len(full_text),
+        'input_length': len(input_text),
+        'target_length': len(summary),
+        'original_words': count_words(full_text),
+        'input_words': count_words(input_text),
+        'target_words': count_words(summary),
+        'compression_ratio': compression,
+        'reduction_percentage': (1 - compression) * 100
     }
+    
+    # Tạo training pair
+    return create_training_pair(
+        document=input_text,
+        summary=summary,
+        approach_name='discourse_aware',
+        metadata=metadata
+    )
 
 
 def process_dataset(articles: List[Dict], max_tokens: int = 512) -> List[Dict]:
@@ -124,7 +132,11 @@ def process_dataset(articles: List[Dict], max_tokens: int = 512) -> List[Dict]:
     for i, article in enumerate(articles):
         try:
             pair = process_single_article(article, max_tokens)
-            pair['metadata']['article_id'] = i
+            
+            # Add article_id vào metadata
+            if 'metadata' in pair:
+                pair['metadata']['article_id'] = i
+            
             pairs.append(pair)
             
             # Progress logging
@@ -133,9 +145,9 @@ def process_dataset(articles: List[Dict], max_tokens: int = 512) -> List[Dict]:
                 
         except Exception as e:
             errors += 1
-            logger.error(f"⚠️  Error processing article {i}: {e}")
+            logger.error(f"âš ï¸  Error processing article {i}: {e}")
     
-    logger.info(f"✅ Completed Approach 3: {len(pairs)}/{len(articles)} successful, {errors} errors")
+    logger.info(f"âœ… Completed Approach 3: {len(pairs)}/{len(articles)} successful, {errors} errors")
     
     return pairs
 
@@ -153,18 +165,22 @@ def calculate_statistics(pairs: List[Dict]) -> Dict:
     if not pairs:
         return {}
     
+    # Extract metadata
+    metadatas = [p.get('metadata', {}) for p in pairs]
+    
     stats = {
         'total_pairs': len(pairs),
-        'avg_num_sentences_original': sum(p['metadata']['num_sentences_original'] for p in pairs) / len(pairs),
-        'avg_num_sentences_selected': sum(p['metadata']['num_sentences_selected'] for p in pairs) / len(pairs),
-        'avg_input_length': sum(p['metadata']['input_length'] for p in pairs) / len(pairs),
-        'avg_target_length': sum(p['metadata']['target_length'] for p in pairs) / len(pairs),
-        'avg_input_words': sum(p['metadata']['input_words'] for p in pairs) / len(pairs),
-        'avg_target_words': sum(p['metadata']['target_words'] for p in pairs) / len(pairs),
-        'avg_compression_ratio': sum(p['metadata']['compression_ratio'] for p in pairs) / len(pairs),
-        'avg_reduction_percentage': sum(p['metadata']['reduction_percentage'] for p in pairs) / len(pairs)
+        'avg_num_sentences_original': sum(m.get('num_sentences_original', 0) for m in metadatas) / len(pairs),
+        'avg_num_sentences_selected': sum(m.get('num_sentences_selected', 0) for m in metadatas) / len(pairs),
+        'avg_document_length': sum(len(p['document']) for p in pairs) / len(pairs),
+        'avg_summary_length': sum(len(p['summary']) for p in pairs) / len(pairs),
+        'avg_document_words': sum(m.get('input_words', 0) for m in metadatas) / len(pairs),
+        'avg_summary_words': sum(m.get('target_words', 0) for m in metadatas) / len(pairs),
+        'avg_compression_ratio': sum(m.get('compression_ratio', 0) for m in metadatas) / len(pairs),
+        'avg_reduction_percentage': sum(m.get('reduction_percentage', 0) for m in metadatas) / len(pairs)
     }
     
-    stats['input_target_ratio'] = stats['avg_input_length'] / stats['avg_target_length']
+    if stats['avg_summary_length'] > 0:
+        stats['document_summary_ratio'] = stats['avg_document_length'] / stats['avg_summary_length']
     
     return stats
