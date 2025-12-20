@@ -24,8 +24,6 @@ def load_dataset_8opt(dataset_name: str, clean: bool = True):
         return None
 
 
-
-
 def basic_info(dataset):
     """Display basic information about the dataset"""
     print("\n" + "="*70)
