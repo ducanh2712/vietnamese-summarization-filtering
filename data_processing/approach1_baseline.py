@@ -1,10 +1,16 @@
 """
 Approach 1: Baseline - Full text without filtering
+Output format: {'document', 'summary'}
 """
 
 import logging
 from typing import Dict, List
-from .text_utils import clean_text, truncate_to_max_tokens, count_words
+from .text_utils import (
+    clean_text,
+    truncate_to_max_tokens,
+    count_words,
+    create_training_pair
+)
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +20,7 @@ def process_single_article(article: Dict, max_tokens: int = 512) -> Dict:
     APPROACH 1: BASELINE
     
     Sử dụng toàn bộ văn bản gốc, không filtering
+    Output format: {'document', 'summary'}
     
     Args:
         article: Dict with 'document', 'summary'
@@ -36,21 +43,26 @@ def process_single_article(article: Dict, max_tokens: int = 512) -> Dict:
     # Check truncation
     was_truncated = len(input_text) < len(full_text)
     
-    return {
-        'input': input_text,
-        'target': summary,
-        'metadata': {
-            'approach': 'baseline',
-            'filtered': False,
-            'original_length': len(full_text),
-            'input_length': len(input_text),
-            'target_length': len(summary),
-            'original_words': count_words(full_text),
-            'input_words': count_words(input_text),
-            'target_words': count_words(summary),
-            'truncated': was_truncated
-        }
+    # Build metadata
+    metadata = {
+        'approach': 'baseline',
+        'filtered': False,
+        'original_length': len(full_text),
+        'input_length': len(input_text),
+        'target_length': len(summary),
+        'original_words': count_words(full_text),
+        'input_words': count_words(input_text),
+        'target_words': count_words(summary),
+        'truncated': was_truncated
     }
+    
+    # Tạo training pair
+    return create_training_pair(
+        document=input_text,
+        summary=summary,
+        approach_name='baseline',
+        metadata=metadata
+    )
 
 
 def process_dataset(articles: List[Dict], max_tokens: int = 512) -> List[Dict]:
@@ -72,7 +84,11 @@ def process_dataset(articles: List[Dict], max_tokens: int = 512) -> List[Dict]:
     for i, article in enumerate(articles):
         try:
             pair = process_single_article(article, max_tokens)
-            pair['metadata']['article_id'] = i
+            
+            # Add article_id vào metadata
+            if 'metadata' in pair:
+                pair['metadata']['article_id'] = i
+            
             pairs.append(pair)
             
             # Progress logging
@@ -81,7 +97,7 @@ def process_dataset(articles: List[Dict], max_tokens: int = 512) -> List[Dict]:
                 
         except Exception as e:
             errors += 1
-            logger.error(f"⚠️  Error processing article {i}: {e}")
+            logger.error(f"⚠️ Error processing article {i}: {e}")
     
     logger.info(f"✅ Completed Approach 1: {len(pairs)}/{len(articles)} successful, {errors} errors")
     
@@ -101,16 +117,20 @@ def calculate_statistics(pairs: List[Dict]) -> Dict:
     if not pairs:
         return {}
     
+    # Extract metadata
+    metadatas = [p.get('metadata', {}) for p in pairs]
+    
     stats = {
         'total_pairs': len(pairs),
-        'avg_input_length': sum(p['metadata']['input_length'] for p in pairs) / len(pairs),
-        'avg_target_length': sum(p['metadata']['target_length'] for p in pairs) / len(pairs),
-        'avg_input_words': sum(p['metadata']['input_words'] for p in pairs) / len(pairs),
-        'avg_target_words': sum(p['metadata']['target_words'] for p in pairs) / len(pairs),
-        'num_truncated': sum(1 for p in pairs if p['metadata']['truncated']),
-        'truncation_rate': sum(1 for p in pairs if p['metadata']['truncated']) / len(pairs)
+        'avg_document_length': sum(len(p['document']) for p in pairs) / len(pairs),
+        'avg_summary_length': sum(len(p['summary']) for p in pairs) / len(pairs),
+        'avg_document_words': sum(m.get('input_words', 0) for m in metadatas) / len(pairs),
+        'avg_summary_words': sum(m.get('target_words', 0) for m in metadatas) / len(pairs),
+        'num_truncated': sum(1 for m in metadatas if m.get('truncated', False)),
+        'truncation_rate': sum(1 for m in metadatas if m.get('truncated', False)) / len(pairs)
     }
     
-    stats['input_target_ratio'] = stats['avg_input_length'] / stats['avg_target_length']
+    if stats['avg_summary_length'] > 0:
+        stats['document_summary_ratio'] = stats['avg_document_length'] / stats['avg_summary_length']
     
     return stats

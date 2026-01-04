@@ -151,3 +151,9 @@ clean-all: clean clean-outputs ## Xóa tất cả (bao gồm môi trường ảo
 	@rm -rf output/
 	@rm -rf data/processed/
 	@echo "$(GREEN)Everything cleaned!$(NC)"
+
+##@ Help
+
+help: ## Hiển thị help message
+	@awk 'BEGIN {FS = ":.*##"; printf "\n$(GREEN)Vietnamese Summarization Project$(NC)\n\n$(YELLOW)Usage:$(NC)\n  make $(GREEN)<target>$(NC)\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2 } /^##@/ { printf "\n$(YELLOW)%s$(NC)\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@echo ""

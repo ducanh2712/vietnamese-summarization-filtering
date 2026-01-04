@@ -1,3 +1,8 @@
+"""
+Visualize training data samples
+Format: document, summary
+"""
+
 import os
 import json
 from transformers import AutoTokenizer
@@ -21,8 +26,8 @@ for root, _, files in os.walk(DATA_DIR):
 
 print(f"📂 Found {len(jsonl_paths)} jsonl files")
 
-printed_target = False
-saved_target = None
+printed_summary = False
+saved_summary = None
 
 for path in jsonl_paths:
     print("\n" + "=" * 80)
@@ -39,24 +44,46 @@ for path in jsonl_paths:
             if i == TARGET_INDEX:
                 sample = json.loads(line)
 
-                # kiểm tra schema
-                assert "input" in sample, "Missing 'input'"
-                assert "target" in sample, "Missing 'target'"
+                # ========== KIỂM TRA SCHEMA ==========
+                assert "document" in sample, "Missing 'document' field"
+                assert "summary" in sample, "Missing 'summary' field"
+                
+                document_text = sample["document"]
+                summary_text = sample["summary"]
+                metadata = sample.get("metadata", {})
 
-                input_text = sample["input"]
-                target_text = sample["target"]
+                print(f"\n===== DOCUMENT AT INDEX {TARGET_INDEX} =====")
+                print("DOCUMENT (first 500 chars):")
+                print(document_text[:MAX_PRINT_CHARS])
+                if len(document_text) > MAX_PRINT_CHARS:
+                    print("...")
 
-                print(f"\n===== INPUT AT INDEX {TARGET_INDEX} =====")
-                print("INPUT (first 500 chars):")
-                print(input_text[:MAX_PRINT_CHARS])
+                # Đếm token
+                tokens = tokenizer(document_text, truncation=False)["input_ids"]
+                print(f"\n📏 Token length (document): {len(tokens)}")
+                
+                # Đếm từ
+                word_count = len(document_text.split())
+                print(f"📏 Word count: {word_count}")
+                print(f"📏 Character count: {len(document_text)}")
 
-                tokens = tokenizer(input_text, truncation=False)["input_ids"]
-                print(f"\nToken length (input): {len(tokens)}")
+                # Hiển thị metadata nếu có
+                if metadata:
+                    print(f"\n--- Metadata ---")
+                    print(f"Approach: {metadata.get('approach', 'N/A')}")
+                    if 'filtered' in metadata:
+                        print(f"Filtered: {metadata['filtered']}")
+                    if 'num_sentences_original' in metadata:
+                        print(f"Original sentences: {metadata['num_sentences_original']}")
+                    if 'num_sentences_selected' in metadata:
+                        print(f"Selected sentences: {metadata['num_sentences_selected']}")
+                    if 'compression_ratio' in metadata:
+                        print(f"Compression ratio: {metadata['compression_ratio']:.2%}")
 
-                # lưu target để in sau (chỉ 1 lần)
-                if not printed_target:
-                    saved_target = target_text
-                    printed_target = True
+                # Lưu summary để in sau (chỉ 1 lần)
+                if not printed_summary:
+                    saved_summary = summary_text
+                    printed_summary = True
 
                 found = True
                 break
@@ -67,11 +94,22 @@ for path in jsonl_paths:
             f"(index {TARGET_INDEX} out of range)"
         )
 
-# ================= PRINT TARGET ONCE =================
-if saved_target is not None:
+# ================= PRINT SUMMARY ONCE =================
+if saved_summary is not None:
     print("\n" + "=" * 80)
-    print("🎯 TARGET (printed once)")
+    print("🎯 SUMMARY (printed once)")
     print("=" * 80)
-    print(saved_target)
+    print(saved_summary)
+    
+    # Đếm token và từ cho summary
+    summary_tokens = tokenizer(saved_summary, truncation=False)["input_ids"]
+    summary_words = len(saved_summary.split())
+    print(f"\n📏 Summary token length: {len(summary_tokens)}")
+    print(f"📏 Summary word count: {summary_words}")
+    print(f"📏 Summary character count: {len(saved_summary)}")
 else:
-    print("\n⚠ No target was found at the given index in any file.")
+    print("\n⚠ No data was found at the given index in any file.")
+
+print("\n" + "=" * 80)
+print("✅ VISUALIZATION COMPLETE")
+print("=" * 80)
